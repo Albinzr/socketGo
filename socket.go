@@ -49,7 +49,7 @@ func (c *Config) client(conn net.Conn) {
 		msg, err := buf.ReadString('\n')
 		if err != nil {
 			if err.Error() == "EOF" || strings.Contains(err.Error(), "use of closed network connection") {
-				fmt.Println("socket connection closed")
+				fmt.Println("socket connection closed ********EOF********* ")
 				c.OnDisconnect(conn)
 				conn.Close()
 				PrintMemUsage()
@@ -71,7 +71,7 @@ func (c *Config) client(conn net.Conn) {
 			}
 		default:
 			fmt.Println("unknown command:", channel)
-			fmt.Println("Connection will now close")
+			fmt.Println("Connection will now close ******************************************")
 			conn.Close()
 		}
 	}
