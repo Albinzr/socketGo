@@ -29,7 +29,7 @@ type Socket struct {
 	conn      net.Conn
 }
 
-var clientMap map[string]Socket
+// var clientMap map[string]Socket
 
 //Init -
 func (c *Config) Init() {
@@ -50,14 +50,11 @@ func (c *Config) Init() {
 		}
 		fmt.Println("connected", conn.RemoteAddr())
 
-		var soc Socket
-
-		if _, ok := clientMap[conn.RemoteAddr().String()]; !ok {
-			clientMap[conn.RemoteAddr().String()] = Socket{
-				conn: conn,
-			}
+		var soc = Socket{
+			conn: conn,
 		}
-		soc = clientMap[conn.RemoteAddr().String()]
+
+		// soc = clientMap[conn.RemoteAddr().String()]
 
 		c.OnConnect(soc)
 		go c.client(soc)
@@ -76,7 +73,7 @@ func (c *Config) client(s Socket) {
 		if err != nil {
 			fmt.Println("Socket connection closed for reason:-->", err.Error())
 			c.OnDisconnect(s)
-			delete(clientMap, s.conn.RemoteAddr().String())
+			// delete(clientMap, s.conn.RemoteAddr().String())
 			s.conn.Close()
 			return
 		}
@@ -101,7 +98,7 @@ func (c *Config) client(s Socket) {
 			fmt.Println("unknown command:", channel)
 			fmt.Println("Connection will now close ----CLOSED----")
 			c.OnDisconnect(s)
-			delete(clientMap, s.conn.RemoteAddr().String())
+			// delete(clientMap, s.conn.RemoteAddr().String())
 			s.conn.Close()
 		}
 	}
