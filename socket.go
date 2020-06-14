@@ -47,15 +47,15 @@ func (c *Config) client(conn net.Conn) {
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
 		msg, err := buf.ReadString('\n')
+		fmt.Println("****************************")
+		fmt.Println(msg)
+		fmt.Println("****************************")
 		if err != nil {
-			// if err.Error() == "EOF" { //|| strings.Contains(err.Error(), "use of closed network connection") {
-			fmt.Println("socket connection closed ********EOF********* ", err.Error())
+			fmt.Println("Socket connection closed for reason:-->", err.Error())
 			c.OnDisconnect(conn)
 			conn.Close()
 			PrintMemUsage()
 			return
-			// }
-
 		}
 		msg = strings.Trim(msg, "\r\n")
 		args := strings.Split(msg, " ")
