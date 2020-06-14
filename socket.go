@@ -48,8 +48,8 @@ func (c *Config) client(conn net.Conn) {
 	for {
 		msg, err := buf.ReadString('\n')
 		if err != nil {
-			if err.Error() == "EOF" || strings.Contains(err.Error(), "use of closed network connection") {
-				fmt.Println("socket connection closed ********EOF********* ")
+			if err.Error() == "EOF" { //|| strings.Contains(err.Error(), "use of closed network connection") {
+				fmt.Println("socket connection closed ********EOF********* ", err.Error())
 				c.OnDisconnect(conn)
 				conn.Close()
 				PrintMemUsage()
