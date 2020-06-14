@@ -68,9 +68,11 @@ func (c *Config) client(conn net.Conn) {
 				msg := args[1]
 				c.OnRecive(conn, channel, msg)
 			}
+		case "PROXY":
+			fmt.Println(msg)
 		default:
 			fmt.Println("unknown command:", channel)
-			fmt.Println("Connection will now close ******************************************")
+			fmt.Println("Connection will now close ----CLOSED----")
 			conn.Close()
 		}
 	}
