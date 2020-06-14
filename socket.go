@@ -106,3 +106,7 @@ func (c *Config) client(s Socket) {
 		}
 	}
 }
+
+func (s *Socket) Write(msg string) {
+	s.conn.Write([]byte(msg))
+}
