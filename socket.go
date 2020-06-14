@@ -5,19 +5,31 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"runtime"
-	"runtime/debug"
 	"strings"
+	"time"
 )
 
 // Config -
 type Config struct {
 	Network      string
 	Address      string
-	OnConnect    func(conn net.Conn)
-	OnDisconnect func(conn net.Conn)
-	OnRecive     func(conn net.Conn, channel string, msg string)
+	OnConnect    func(s Socket)
+	OnDisconnect func(s Socket)
+	OnRecive     func(s Socket, channel string, msg string)
 }
+
+//Socket socket data passed for callback
+type Socket struct {
+	IP        string `json:"ip"`
+	Aid       string `json:"aid"`
+	Sid       string `json:"sid"`
+	Status    string `json:"type"`
+	StartTime int64  `json:"startTime"`
+	EndTime   int64  `json:"endTime"`
+	conn      net.Conn
+}
+
+var clientMap map[string]Socket
 
 //Init -
 func (c *Config) Init() {
@@ -37,13 +49,24 @@ func (c *Config) Init() {
 			return
 		}
 		fmt.Println("connected", conn.RemoteAddr())
-		c.OnConnect(conn)
-		go c.client(conn)
+
+		var soc Socket
+
+		if _, ok := clientMap[conn.RemoteAddr().String()]; !ok {
+			clientMap[conn.RemoteAddr().String()] = Socket{
+				conn: conn,
+			}
+		}
+		soc = clientMap[conn.RemoteAddr().String()]
+
+		c.OnConnect(soc)
+		go c.client(soc)
 	}
 }
 
-func (c *Config) client(conn net.Conn) {
-	buf := bufio.NewReader(conn)
+func (c *Config) client(s Socket) {
+	buf := bufio.NewReader(s.conn)
+
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
 		msg, err := buf.ReadString('\n')
@@ -52,9 +75,9 @@ func (c *Config) client(conn net.Conn) {
 		fmt.Println("****************************")
 		if err != nil {
 			fmt.Println("Socket connection closed for reason:-->", err.Error())
-			c.OnDisconnect(conn)
-			conn.Close()
-			PrintMemUsage()
+			c.OnDisconnect(s)
+			delete(clientMap, s.conn.RemoteAddr().String())
+			s.conn.Close()
 			return
 		}
 		msg = strings.Trim(msg, "\r\n")
@@ -66,32 +89,20 @@ func (c *Config) client(conn net.Conn) {
 		case "/beacon":
 			if len(args) > 1 {
 				msg := args[1]
-				c.OnRecive(conn, channel, msg)
+				c.OnRecive(s, channel, msg)
 			}
 		case "PROXY":
 			fmt.Println(msg)
+			if len(args) >= 2 {
+				s.IP = args[2]
+				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
+			}
 		default:
 			fmt.Println("unknown command:", channel)
 			fmt.Println("Connection will now close ----CLOSED----")
-			conn.Close()
+			c.OnDisconnect(s)
+			delete(clientMap, s.conn.RemoteAddr().String())
+			s.conn.Close()
 		}
 	}
-}
-
-//PrintMemUsage -
-func PrintMemUsage() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-	fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
-	fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
-	fmt.Printf("\tNumGC = %v\n", m.NumGC)
-	fmt.Printf("\tMemory Freed = %v\n", bToMb(m.Frees))
-
-	runtime.GC()
-	debug.FreeOSMemory()
-}
-
-func bToMb(b uint64) uint64 {
-	return b / 1024 / 1024
 }
