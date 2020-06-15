@@ -11,7 +11,6 @@ import (
 
 	lz "github.com/Albinzr/lzGo"
 	ws "github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 )
 
 // Config -
@@ -38,8 +37,8 @@ type Socket struct {
 //Init -
 func (c *Config) Init() {
 
-	fmt.Println("localhost:8080")
-	http.ListenAndServe("localhost:8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(c.Address)
+	http.ListenAndServe(c.Address, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
 			log.Fatal("Cannot start upgrade-------------", err)
@@ -50,7 +49,7 @@ func (c *Config) Init() {
 		}
 
 		go c.client(soc)
-
+	}))
 }
 
 func (c *Config) client(s Socket) {
