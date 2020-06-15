@@ -9,6 +9,7 @@ import (
 	"time"
 
 	lz "github.com/Albinzr/lzGo"
+	ws "github.com/gobwas/ws"
 )
 
 // Config -
@@ -39,6 +40,13 @@ func (c *Config) Init() {
 		log.Fatal("Cannot start net.Listen", err)
 		return
 	}
+	u := ws.Upgrader{
+		OnHeader: func(key, value []byte) (err error) {
+			log.Printf("non-websocket header: %q=%q", key, value)
+			return
+		},
+	}
+
 	defer ln.Close()
 	for {
 		conn, err := ln.Accept()
@@ -47,6 +55,11 @@ func (c *Config) Init() {
 			return
 		}
 		fmt.Println("connected", conn.RemoteAddr())
+
+		_, err = u.Upgrade(conn)
+		if err != nil {
+			fmt.Println("Error upgrading", err)
+		}
 
 		var soc = Socket{
 			conn: conn,
@@ -76,7 +89,6 @@ func (c *Config) client(s Socket) {
 		switch channel {
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
-			fmt.Println("-------------------------------------------2-----------------------------------")
 			if len(args) > 1 {
 				enMsg := args[1]
 				deMsg, err := lz.DecompressFromBase64(enMsg)
@@ -91,7 +103,6 @@ func (c *Config) client(s Socket) {
 
 			}
 		case "PROXY":
-			fmt.Println("-------------------------------------------1-----------------------------------")
 			if len(args) >= 2 {
 				s.IP = args[2]
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
