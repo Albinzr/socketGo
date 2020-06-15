@@ -39,9 +39,6 @@ func (c *Config) Init() {
 		return
 	}
 	defer ln.Close()
-
-	fmt.Println("server started on", c.Address)
-
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -54,8 +51,6 @@ func (c *Config) Init() {
 			conn: conn,
 		}
 
-		// soc = clientMap[conn.RemoteAddr().String()]
-
 		c.OnConnect(soc)
 		go c.client(soc)
 	}
@@ -67,16 +62,13 @@ func (c *Config) client(s Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
 		msg, err := buf.ReadString('\n')
-		fmt.Println("****************************")
-		fmt.Println(msg)
-		fmt.Println("****************************")
 		if err != nil {
 			fmt.Println("Socket connection closed for reason:-->", err.Error())
+			s.EndTime = time.Now().UnixNano() / int64(time.Millisecond)
 			c.OnDisconnect(s)
-			// delete(clientMap, s.conn.RemoteAddr().String())
-			s.conn.Close()
 			return
 		}
+		//
 		msg = strings.Trim(msg, "\r\n")
 		args := strings.Split(msg, " ")
 		channel := strings.TrimSpace(args[0])
@@ -89,21 +81,38 @@ func (c *Config) client(s Socket) {
 				c.OnRecive(s, channel, msg)
 			}
 		case "PROXY":
-			fmt.Println(msg)
 			if len(args) >= 2 {
 				s.IP = args[2]
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 			}
+		case "/info":
+			if len(args) >= 2 {
+				s.Sid = args[1]
+				s.Aid = args[2]
+			}
 		default:
 			fmt.Println("unknown command:", channel)
+			fmt.Println("****************************")
+			fmt.Println(msg)
+			fmt.Println("****************************")
 			fmt.Println("Connection will now close ----CLOSED----")
-			c.OnDisconnect(s)
-			// delete(clientMap, s.conn.RemoteAddr().String())
-			s.conn.Close()
+			//
+			c.internalClose(s)
 		}
 	}
 }
 
+//Write - write back to connection
 func (s *Socket) Write(msg string) {
 	s.conn.Write([]byte(msg))
+}
+
+//Close - close connection
+func (s *Socket) Close(msg string) {
+	s.conn.Close()
+}
+
+func (c *Config) internalClose(s Socket) {
+	s.conn.Close()
+	c.OnDisconnect(s)
 }
