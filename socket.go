@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
 	lz "github.com/Albinzr/lzGo"
 	ws "github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
 // Config -
@@ -35,30 +37,12 @@ type Socket struct {
 
 //Init -
 func (c *Config) Init() {
-	ln, err := net.Listen(c.Network, c.Address)
-	if err != nil {
-		log.Fatal("Cannot start net.Listen-------------", err)
-		return
-	}
-	u := ws.Upgrader{
-		OnHeader: func(key, value []byte) (err error) {
-			log.Printf("non-websocket header: %q=%q", key, value)
-			return
-		},
-	}
 
-	defer ln.Close()
-	for {
-		conn, err := ln.Accept()
+	fmt.Println("localhost:8080")
+	http.ListenAndServe("localhost:8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
-			fmt.Println("Error form socker ln.accept()", err)
-			return
-		}
-		fmt.Println("connected", conn.RemoteAddr())
-
-		_, err = u.Upgrade(conn)
-		if err != nil {
-			fmt.Println("Error upgrading", err)
+			log.Fatal("Cannot start upgrade-------------", err)
 		}
 
 		var soc = Socket{
@@ -66,7 +50,7 @@ func (c *Config) Init() {
 		}
 
 		go c.client(soc)
-	}
+
 }
 
 func (c *Config) client(s Socket) {
