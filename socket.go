@@ -3,13 +3,14 @@ package socket
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
 	lz "github.com/Albinzr/lzGo"
-	ws "github.com/gobwas/ws"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
 // Config -
@@ -35,38 +36,58 @@ type Socket struct {
 
 //Init -
 func (c *Config) Init() {
-	ln, err := net.Listen(c.Network, c.Address)
-	if err != nil {
-		log.Fatal("Cannot start net.Listen", err)
-		return
-	}
-	u := ws.Upgrader{
-		OnHeader: func(key, value []byte) (err error) {
-			log.Printf("non-websocket header: %q=%q", key, value)
-			return
-		},
-	}
-
-	defer ln.Close()
-	for {
-		conn, err := ln.Accept()
+	http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
-			fmt.Println("Error form socker ln.accept()", err)
-			return
+			// handle error
 		}
-		fmt.Println("connected", conn.RemoteAddr())
+		go func() {
+			defer conn.Close()
 
-		_, err = u.Upgrade(conn)
-		if err != nil {
-			fmt.Println("Error upgrading", err)
-		}
+			for {
+				msg, op, err := wsutil.ReadClientData(conn)
+				if err != nil {
+					// handle error
+				}
+				err = wsutil.WriteServerMessage(conn, op, msg)
+				if err != nil {
+					// handle error
+				}
+			}
+		}()
+	}))
+	// ln, err := net.Listen(c.Network, c.Address)
+	// if err != nil {
+	// 	log.Fatal("Cannot start net.Listen", err)
+	// 	return
+	// }
+	// u := ws.Upgrader{
+	// 	OnHeader: func(key, value []byte) (err error) {
+	// 		log.Printf("non-websocket header: %q=%q", key, value)
+	// 		return
+	// 	},
+	// }
 
-		var soc = Socket{
-			conn: conn,
-		}
+	// defer ln.Close()
+	// for {
+	// 	conn, err := ln.Accept()
+	// 	if err != nil {
+	// 		fmt.Println("Error form socker ln.accept()", err)
+	// 		return
+	// 	}
+	// 	fmt.Println("connected", conn.RemoteAddr())
 
-		go c.client(soc)
-	}
+	// 	_, err = u.Upgrade(conn)
+	// 	if err != nil {
+	// 		fmt.Println("Error upgrading", err)
+	// 	}
+
+	// 	var soc = Socket{
+	// 		conn: conn,
+	// 	}
+
+	// 	go c.client(soc)
+	// }
 }
 
 func (c *Config) client(s Socket) {
