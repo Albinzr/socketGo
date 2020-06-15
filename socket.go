@@ -7,6 +7,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	lz "github.com/Albinzr/lzGo"
 )
 
 // Config -
@@ -23,7 +25,6 @@ type Socket struct {
 	IP        string `json:"ip"`
 	Aid       string `json:"aid"`
 	Sid       string `json:"sid"`
-	Status    string `json:"type"`
 	StartTime int64  `json:"startTime"`
 	EndTime   int64  `json:"endTime"`
 	conn      net.Conn
@@ -51,7 +52,6 @@ func (c *Config) Init() {
 			conn: conn,
 		}
 
-		c.OnConnect(soc)
 		go c.client(soc)
 	}
 }
@@ -76,28 +76,42 @@ func (c *Config) client(s Socket) {
 		switch channel {
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
+			fmt.Println("-------------------------------------------2-----------------------------------")
 			if len(args) > 1 {
-				msg := args[1]
-				c.OnRecive(s, channel, msg)
+				enMsg := args[1]
+				deMsg, err := lz.DecompressFromBase64(enMsg)
+
+				if err != nil {
+					c.OnRecive(s, channel, deMsg)
+					return
+				}
+
+				fmt.Println("error decompressing msg", err)
+				return
+
 			}
 		case "PROXY":
+			fmt.Println("-------------------------------------------1-----------------------------------")
 			if len(args) >= 2 {
 				s.IP = args[2]
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 			}
-		case "/info":
+		case "/connect":
 			if len(args) >= 2 {
 				s.Sid = args[1]
 				s.Aid = args[2]
 			}
+			c.OnConnect(s)
 		default:
-			fmt.Println("unknown command:", channel)
+
 			fmt.Println("****************************")
+			fmt.Println("unknown command:", channel)
+			fmt.Println("Connection will now close ----CLOSED----")
 			fmt.Println(msg)
 			fmt.Println("****************************")
-			fmt.Println("Connection will now close ----CLOSED----")
+
 			//
-			c.internalClose(s)
+			c.OnDisconnect(s)
 		}
 	}
 }
@@ -110,9 +124,4 @@ func (s *Socket) Write(msg string) {
 //Close - close connection
 func (s *Socket) Close(msg string) {
 	s.conn.Close()
-}
-
-func (c *Config) internalClose(s Socket) {
-	s.conn.Close()
-	c.OnDisconnect(s)
 }
