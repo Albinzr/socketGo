@@ -57,6 +57,7 @@ func (c *Config) client(s Socket) {
 
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
+		fmt.Println("in")
 		msg, err := buf.ReadString('\n')
 		if err != nil {
 			fmt.Println("Socket connection closed for reason:-->", err.Error())
