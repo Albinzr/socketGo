@@ -122,6 +122,6 @@ func (s *Socket) Write(msg string) {
 }
 
 //Close - close connection
-func (s *Socket) Close(msg string) {
+func (s *Socket) Close() {
 	s.conn.Close()
 }
