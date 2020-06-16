@@ -49,7 +49,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 		conn: conn,
 	}
 	defer func() {
-		fmt.Println("pppp")
+		fmt.Println("Connection closed")
 		c.OnDisconnect(soc)
 		conn.Close()
 	}()
@@ -113,4 +113,8 @@ func (c *Config) readMsg(s Socket) {
 //Write - write back to connection
 func (s *Socket) Write(msg string) {
 	s.conn.WriteMessage(0, []byte(msg))
+}
+
+func (s *Socket) Close() {
+	s.conn.Close()
 }
