@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	lz "github.com/Albinzr/lzGo"
 	"github.com/gorilla/websocket"
 )
 
@@ -76,13 +77,13 @@ func (c *Config) readMsg(s Socket) {
 
 			if len(args) >= 2 {
 				enMsg := args[1]
-				// deMsg, err := lz.DecompressFromBase64(enMsg)
+				deMsg, err := lz.DecompressFromBase64(enMsg)
 				if err != nil || enMsg == "" {
 					s.conn.Close()
 					c.OnDisconnect(s)
 					fmt.Println("decomperssion failed")
 				}
-				c.OnRecive(s, channel, enMsg)
+				c.OnRecive(s, channel, deMsg)
 
 			}
 		case "PROXY":
