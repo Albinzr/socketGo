@@ -1,16 +1,14 @@
 package socket
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	lz "github.com/Albinzr/lzGo"
-	ws "github.com/gobwas/ws"
+	"github.com/gorilla/websocket"
 )
 
 // Config -
@@ -29,43 +27,46 @@ type Socket struct {
 	Sid       string `json:"sid"`
 	StartTime int64  `json:"startTime"`
 	EndTime   int64  `json:"endTime"`
-	conn      net.Conn
+	conn      *websocket.Conn
 }
 
-// var clientMap map[string]Socket
+var upgrader = websocket.Upgrader{}
 
 //Init -
 func (c *Config) Init() {
-
-	fmt.Println(c.Address)
-	http.ListenAndServe(c.Address, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, _, _, err := ws.UpgradeHTTP(r, w)
-		if err != nil {
-			log.Fatal("Cannot start upgrade-------------", err)
-		}
-
-		var soc = Socket{
-			conn: conn,
-		}
-
-		go c.client(soc)
-	}))
+	http.HandleFunc("/", c.processData)
+	log.Fatal(http.ListenAndServe(c.Address, nil))
 }
 
-func (c *Config) client(s Socket) {
-	buf := bufio.NewReader(s.conn)
+func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+	var soc = Socket{
+		conn: conn,
+	}
+	defer func() {
+		fmt.Println("pppp")
+		c.OnDisconnect(soc)
+		conn.Close()
+	}()
+	c.readMsg(soc)
+}
 
+func (c *Config) readMsg(s Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
-		fmt.Println("in")
-		msg, err := buf.ReadString('\n')
+		_, msgBytes, err := s.conn.ReadMessage()
 		if err != nil {
-			fmt.Println("Socket connection closed for reason:-->", err.Error())
-			s.EndTime = time.Now().UnixNano() / int64(time.Millisecond)
-			c.OnDisconnect(s)
-			return
+			log.Println("read---------------->:", err)
+			s.conn.Close()
+			break
 		}
-		//
+
+		msg := string(msgBytes)
 		msg = strings.Trim(msg, "\r\n")
 		args := strings.Split(msg, " ")
 		channel := strings.TrimSpace(args[0])
@@ -73,26 +74,25 @@ func (c *Config) client(s Socket) {
 		switch channel {
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
-			if len(args) > 1 {
+
+			if len(args) >= 2 {
 				enMsg := args[1]
 				deMsg, err := lz.DecompressFromBase64(enMsg)
-
-				if err != nil {
-					c.OnRecive(s, channel, deMsg)
-					return
+				if err != nil || deMsg == "" {
+					s.conn.Close()
+					c.OnDisconnect(s)
+					fmt.Println("decomperssion failed")
 				}
-
-				fmt.Println("error decompressing msg", err)
-				return
+				c.OnRecive(s, channel, deMsg)
 
 			}
 		case "PROXY":
-			if len(args) >= 2 {
+			if len(args) >= 3 {
 				s.IP = args[2]
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 			}
 		case "/connect":
-			if len(args) >= 2 {
+			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
 			}
@@ -101,11 +101,10 @@ func (c *Config) client(s Socket) {
 
 			fmt.Println("****************************")
 			fmt.Println("unknown command:", channel)
-			fmt.Println("Connection will now close ----CLOSED----")
 			fmt.Println(msg)
+			fmt.Println("Connection will now close ----CLOSED----")
 			fmt.Println("****************************")
-
-			//
+			s.conn.Close()
 			c.OnDisconnect(s)
 		}
 	}
@@ -113,10 +112,5 @@ func (c *Config) client(s Socket) {
 
 //Write - write back to connection
 func (s *Socket) Write(msg string) {
-	s.conn.Write([]byte(msg))
-}
-
-//Close - close connection
-func (s *Socket) Close() {
-	s.conn.Close()
+	s.conn.WriteMessage(0, []byte(msg))
 }
