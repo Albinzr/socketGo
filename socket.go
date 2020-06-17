@@ -75,7 +75,7 @@ func (c *Config) readMsg(s Socket) {
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
 
-			if len(args) >= 2 {
+			if len(args) >= 2 && len(s.Sid) > 0 {
 				enMsg := args[1]
 				deMsg, err := lz.DecompressFromBase64(enMsg)
 				if err != nil || enMsg == "" {
@@ -84,8 +84,11 @@ func (c *Config) readMsg(s Socket) {
 					fmt.Println("decomperssion failed")
 				}
 				c.OnRecive(s, channel, deMsg)
-
+				s.Write(args[2])
+			} else {
+				s.conn.Close()
 			}
+
 		case "PROXY":
 			if len(args) >= 3 {
 				s.IP = args[2]
@@ -97,6 +100,7 @@ func (c *Config) readMsg(s Socket) {
 				s.Aid = args[2]
 			}
 			c.OnConnect(s)
+			s.Write("Accepted")
 		default:
 
 			fmt.Println("****************************")
