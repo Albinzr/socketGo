@@ -116,7 +116,7 @@ func (c *Config) readMsg(s Socket) {
 
 //Write - write back to connection
 func (s *Socket) Write(msg string) {
-	s.conn.WriteMessage(0, []byte(msg))
+	s.conn.WriteMessage(1, []byte(msg))
 }
 
 //Close - close connection
