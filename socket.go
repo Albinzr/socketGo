@@ -122,5 +122,6 @@ func (s *Socket) Write(msg string) {
 
 //Close - close connection
 func (s *Socket) Close() {
-	s.conn.Close()
+	err := s.conn.Close()
+	fmt.Println("Manuel close failled : reason ->", err)
 }
