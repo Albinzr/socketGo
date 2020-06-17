@@ -30,7 +30,9 @@ type Socket struct {
 	conn      *websocket.Conn
 }
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	HandshakeTimeout : 2 * time.Minute,
+}
 
 //Init -
 func (c *Config) Init() {
@@ -129,11 +131,28 @@ func (c *Config) readMsg(s Socket) {
 //Write - write back to connection
 func (s *Socket) Write(msg string) {
 	err := s.conn.WriteMessage(1, []byte(msg))
-	fmt.Println("error writing : -> ", msg, "reason ->", err)
+	if err != nil {
+		fmt.Println("error writing : -> ", msg, "reason ->", err)
+	}
 }
 
 //Close - close connection
 func (s *Socket) Close() {
 	err := s.conn.Close()
-	fmt.Println("Manuel close failled : reason ->", err)
+	if err != nil {
+		fmt.Println("Manuel close failled : reason ->", err)
+	}
+	
 }
+
+
+func hash(str string) {
+	hash := 5381
+	i  :=  len(str)
+  
+	for 1 > 0 {
+	  hash = (hash * 33) ^ str.charCodeAt(--i);
+	}
+	return hash >>> 0;
+  }
+  
