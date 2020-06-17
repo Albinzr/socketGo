@@ -85,7 +85,7 @@ func (c *Config) readMsg(s Socket) {
 					fmt.Println("decomperssion failed")
 				}
 				c.OnRecive(s, channel, deMsg)
-				s.Write(args[2])
+				s.Write("ack " + args[2])
 			} else {
 				//remove write
 				s.Write("beacon format wrong (connection will close now) ")
