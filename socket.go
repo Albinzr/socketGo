@@ -116,7 +116,8 @@ func (c *Config) readMsg(s Socket) {
 
 //Write - write back to connection
 func (s *Socket) Write(msg string) {
-	s.conn.WriteMessage(1, []byte(msg))
+	err := s.conn.WriteMessage(1, []byte(msg))
+	fmt.Println("error writing : -> ", msg, "reason ->", err)
 }
 
 //Close - close connection
