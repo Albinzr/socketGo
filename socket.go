@@ -99,6 +99,7 @@ func (c *Config) readMsg(s Socket) {
 				s.IP = args[2]
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 			}
+
 		case "/connect":
 			if len(s.Sid) > 0 {
 				//remove write
@@ -113,6 +114,10 @@ func (c *Config) readMsg(s Socket) {
 			} else {
 				s.Write("connect format wrong (connection will close now) ")
 				s.conn.Close()
+			}
+		case "/hb":
+			if len(args) == 1 {
+				fmt.Println("hb--->")
 			}
 
 		default:
