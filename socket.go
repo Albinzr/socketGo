@@ -31,7 +31,7 @@ type Socket struct {
 }
 
 var upgrader = websocket.Upgrader{
-	HandshakeTimeout : 2 * time.Minute,
+	HandshakeTimeout: 2 * time.Minute,
 }
 
 //Init -
@@ -63,7 +63,7 @@ func (c *Config) readMsg(s Socket) {
 	for {
 		mt, msgBytes, err := s.conn.ReadMessage()
 		if err != nil {
-			log.Println("msgType: ",mt,"read---------------->:", err)
+			log.Println("msgType: ", mt, "read---------------->:", err)
 			s.conn.Close()
 			break
 		}
@@ -142,17 +142,5 @@ func (s *Socket) Close() {
 	if err != nil {
 		fmt.Println("Manuel close failled : reason ->", err)
 	}
-	
+
 }
-
-
-func hash(str string) {
-	hash := 5381
-	i  :=  len(str)
-  
-	for 1 > 0 {
-	  hash = (hash * 33) ^ str.charCodeAt(--i);
-	}
-	return hash >>> 0;
-  }
-  
