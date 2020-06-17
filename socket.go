@@ -61,9 +61,9 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 func (c *Config) readMsg(s Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
-		_, msgBytes, err := s.conn.ReadMessage()
+		mt, msgBytes, err := s.conn.ReadMessage()
 		if err != nil {
-			log.Println("read---------------->:", err)
+			log.Println("msgType: ",mt,"read---------------->:", err)
 			s.conn.Close()
 			break
 		}
