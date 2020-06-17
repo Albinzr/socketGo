@@ -74,11 +74,12 @@ func (c *Config) readMsg(s Socket) {
 		switch channel {
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
-
 			if len(args) >= 2 && len(s.Sid) > 0 {
 				enMsg := args[1]
 				deMsg, err := lz.DecompressFromBase64(enMsg)
 				if err != nil || enMsg == "" {
+					//remove write
+					s.Write("Decompression failled (connection will close now) ")
 					s.conn.Close()
 					c.OnDisconnect(s)
 					fmt.Println("decomperssion failed")
@@ -86,6 +87,8 @@ func (c *Config) readMsg(s Socket) {
 				c.OnRecive(s, channel, deMsg)
 				s.Write(args[2])
 			} else {
+				//remove write
+				s.Write("beacon format wrong (connection will close now) ")
 				s.conn.Close()
 			}
 
@@ -95,12 +98,21 @@ func (c *Config) readMsg(s Socket) {
 				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 			}
 		case "/connect":
+			if len(s.Sid) > 0 {
+				//remove write
+				s.Write("Multiple connection (connection will close now) ")
+				s.conn.Close()
+			}
 			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
+				c.OnConnect(s)
+				s.Write("Accepted")
+			} else {
+				s.Write("connect format wrong (connection will close now) ")
+				s.conn.Close()
 			}
-			c.OnConnect(s)
-			s.Write("Accepted")
+
 		default:
 
 			fmt.Println("****************************")
