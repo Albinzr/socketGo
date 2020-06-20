@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	lz "github.com/Albinzr/lzGo"
 	"github.com/gorilla/websocket"
 )
 
@@ -49,6 +48,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	}
 	var soc = Socket{
 		conn: conn,
+		IP:   r.Header.Get("X-Real-IP"),
 	}
 	defer func() {
 		fmt.Println("Connection closed")
@@ -78,15 +78,7 @@ func (c *Config) readMsg(s Socket) {
 		case "/beacon":
 			if len(args) >= 2 && len(s.Sid) > 0 {
 				enMsg := args[1]
-				deMsg, err := lz.DecompressFromBase64(enMsg)
-				if err != nil || enMsg == "" {
-					//remove write
-					s.Write("Decompression failled (connection will close now) ")
-					s.conn.Close()
-					c.OnDisconnect(s)
-					fmt.Println("decomperssion failed")
-				}
-				c.OnRecive(s, channel, deMsg)
+				c.OnRecive(s, channel, enMsg)
 				s.Write("ack " + args[2])
 			} else {
 				//remove write
@@ -148,4 +140,26 @@ func (s *Socket) Close() {
 		fmt.Println("Manuel close failled : reason ->", err)
 	}
 
+}
+
+func keepAlive(c *websocket.Conn, timeout time.Duration) {
+	lastResponse := time.Now()
+	c.SetPongHandler(func(msg string) error {
+		lastResponse = time.Now()
+		return nil
+	})
+
+	go func() {
+		for {
+			err := c.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+			if err != nil {
+				return
+			}
+			time.Sleep(timeout / 2)
+			if time.Now().Sub(lastResponse) > timeout {
+				c.Close()
+				return
+			}
+		}
+	}()
 }
