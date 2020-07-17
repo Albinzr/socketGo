@@ -102,8 +102,10 @@ func (c *Config) readMsg(s Socket) {
 			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
-				c.OnConnect(s)
+				s.StartTime = time.Now().Unix() * 1000
 				s.Write("Accepted")
+				s.Write(s.Sid +"-"+s.Aid)
+				c.OnConnect(s)
 			} else {
 				s.Write("connect format wrong (connection will close now) ")
 				s.conn.Close()
