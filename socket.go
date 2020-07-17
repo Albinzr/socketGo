@@ -14,9 +14,9 @@ import (
 type Config struct {
 	Network      string
 	Address      string
-	OnConnect    func(s Socket)
-	OnDisconnect func(s Socket)
-	OnRecive     func(s Socket, channel string, msg string)
+	OnConnect    func(s *Socket)
+	OnDisconnect func(s *Socket)
+	OnRecive     func(s *Socket, channel string, msg string)
 }
 
 //Socket socket data passed for callback
@@ -46,7 +46,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
-	var soc = Socket{
+	var soc = &Socket{
 		conn: conn,
 		IP:   r.Header.Get("X-Real-IP"),
 	}
@@ -59,7 +59,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	c.readMsg(soc)
 }
 
-func (c *Config) readMsg(s Socket) {
+func (c *Config) readMsg(s *Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
 	for {
 		mt, msgBytes, err := s.conn.ReadMessage()
