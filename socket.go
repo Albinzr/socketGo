@@ -52,6 +52,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		fmt.Println("Connection closed")
+		soc.EndTime = int64(time.Now().Unix()*1000)
 		c.OnDisconnect(soc)
 		conn.Close()
 	}()
@@ -120,7 +121,6 @@ func (c *Config) readMsg(s Socket) {
 			fmt.Println("Connection will now close ----CLOSED----")
 			fmt.Println("****************************")
 			s.conn.Close()
-			c.OnDisconnect(s)
 		}
 	}
 }
