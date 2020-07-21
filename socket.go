@@ -52,7 +52,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		fmt.Println("Connection closed")
-		soc.EndTime = int64(time.Now().Unix()*1000)
+		soc.EndTime = time.Now().Unix() * 1000
 		c.OnDisconnect(soc)
 		conn.Close()
 	}()
@@ -90,7 +90,7 @@ func (c *Config) readMsg(s *Socket) {
 		case "PROXY":
 			if len(args) >= 3 {
 				s.IP = args[2]
-				s.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
+				s.StartTime = time.Now().Unix() * 1000
 			}
 
 		case "/connect":
