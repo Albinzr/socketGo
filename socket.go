@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,18 +22,23 @@ type Config struct {
 
 //Socket socket data passed for callback
 type Socket struct {
+	conn      *websocket.Conn
 	IP        string `json:"ip"`
 	Aid       string `json:"aid"`
 	Sid       string `json:"sid"`
 	StartTime int64  `json:"startTime"`
 	EndTime   int64  `json:"endTime"`
-	conn      *websocket.Conn
+	ErrorCount int   `json:"errorCount"`
+	ClickCount int   `json:"clickCount"`
+	PageCount int    `json:"pageCount"`
+
 }
 
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 2 * time.Minute,
 }
 
+var stats map[string]string
 //Init -
 func (c *Config) Init() {
 	http.HandleFunc("/", c.processData)
@@ -52,12 +58,29 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		fmt.Println("Connection closed")
+		sid := soc.Sid
 		soc.EndTime = time.Now().Unix() * 1000
+
+		currentStats := getStats(stats[sid])
+
+		soc.ClickCount = currentStats["clickCount"].(int)
+		soc.ErrorCount = currentStats["errorCount"].(int)
+		soc.PageCount = currentStats["pageCount"].(int)
+
+		delete(stats,sid)
+
 		c.OnDisconnect(soc)
 		conn.Close()
 	}()
 	c.readMsg(soc)
 }
+
+func getStats(stats string) map[string]interface{}{
+	var result map[string]interface{}
+	json.Unmarshal([]byte(stats), &result)
+	return result
+}
+
 
 func (c *Config) readMsg(s *Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
@@ -92,6 +115,13 @@ func (c *Config) readMsg(s *Socket) {
 				s.IP = args[2]
 				s.StartTime = time.Now().Unix() * 1000
 			}
+		case "/stats": // /stats sid {clickCount:10,errorCount:20,pageCount:4} (json string - no space in json)
+			if len(args) == 3{
+				sid := args[1]
+				statData := args[2]
+				stats[sid] = statData
+			}
+
 
 		case "/connect":
 			if len(s.Sid) > 0 {
