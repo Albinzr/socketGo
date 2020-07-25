@@ -22,16 +22,15 @@ type Config struct {
 
 //Socket socket data passed for callback
 type Socket struct {
-	conn      *websocket.Conn
-	IP        string `json:"ip"`
-	Aid       string `json:"aid"`
-	Sid       string `json:"sid"`
-	StartTime int64  `json:"startTime"`
-	EndTime   int64  `json:"endTime"`
-	ErrorCount int   `json:"errorCount"`
-	ClickCount int   `json:"clickCount"`
-	PageCount int    `json:"pageCount"`
-
+	conn       *websocket.Conn
+	IP         string `json:"ip"`
+	Aid        string `json:"aid"`
+	Sid        string `json:"sid"`
+	StartTime  int64  `json:"startTime"`
+	EndTime    int64  `json:"endTime"`
+	ErrorCount int    `json:"errorCount"`
+	ClickCount int    `json:"clickCount"`
+	PageCount  int    `json:"pageCount"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -39,6 +38,7 @@ var upgrader = websocket.Upgrader{
 }
 
 var stats map[string]string
+
 //Init -
 func (c *Config) Init() {
 	http.HandleFunc("/", c.processData)
@@ -63,11 +63,11 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 
 		currentStats := getStats(stats[sid])
 
-		soc.ClickCount = currentStats["clickCount"].(int)
-		soc.ErrorCount = currentStats["errorCount"].(int)
-		soc.PageCount = currentStats["pageCount"].(int)
+		soc.ClickCount = getMapValue(currentStats, "clickCount")
+		soc.ErrorCount = getMapValue(currentStats, "errorCount")
+		soc.PageCount = getMapValue(currentStats, "pageCount")
 
-		delete(stats,sid)
+		delete(stats, sid)
 
 		c.OnDisconnect(soc)
 		conn.Close()
@@ -75,12 +75,23 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	c.readMsg(soc)
 }
 
-func getStats(stats string) map[string]interface{}{
+func getMapValue(obj map[string]interface{}, key string) int {
+	if item, found := obj[key]; found {
+		if value, ok := item.(int); !ok {
+			return value
+		} else {
+			return 0
+		}
+	} else {
+		return 0
+	}
+}
+
+func getStats(stats string) map[string]interface{} {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(stats), &result)
 	return result
 }
-
 
 func (c *Config) readMsg(s *Socket) {
 	//TODO: - if buffer size is to big discard data from buffer
@@ -116,12 +127,11 @@ func (c *Config) readMsg(s *Socket) {
 				s.StartTime = time.Now().Unix() * 1000
 			}
 		case "/stats": // /stats sid {clickCount:10,errorCount:20,pageCount:4} (json string - no space in json)
-			if len(args) == 3{
+			if len(args) == 3 {
 				sid := args[1]
 				statData := args[2]
 				stats[sid] = statData
 			}
-
 
 		case "/connect":
 			if len(s.Sid) > 0 {
@@ -134,7 +144,7 @@ func (c *Config) readMsg(s *Socket) {
 				s.Aid = args[2]
 				s.StartTime = time.Now().Unix() * 1000
 				s.Write("Accepted")
-				s.Write(s.Sid +"-"+s.Aid)
+				s.Write(s.Sid + "-" + s.Aid)
 				c.OnConnect(s)
 			} else {
 				s.Write("connect format wrong (connection will close now) ")
