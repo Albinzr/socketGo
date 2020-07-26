@@ -31,6 +31,7 @@ type Socket struct {
 	ErrorCount int    `json:"errorCount"`
 	ClickCount int    `json:"clickCount"`
 	PageCount  int    `json:"pageCount"`
+	Initial  bool    `json:"initial"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -142,6 +143,14 @@ func (c *Config) readMsg(s *Socket) {
 			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
+
+				if len(args) >= 4 && args[3] == "initial"{
+					s.Initial = true
+				}else{
+					s.Initial = false
+				}
+
+
 				s.StartTime = time.Now().Unix() * 1000
 				s.Write("Accepted")
 				s.Write(s.Sid + "-" + s.Aid)
@@ -150,6 +159,8 @@ func (c *Config) readMsg(s *Socket) {
 				s.Write("connect format wrong (connection will close now) ")
 				s.conn.Close()
 			}
+
+
 		case "/hb":
 			if len(args) == 1 {
 				fmt.Println("hb--->")
