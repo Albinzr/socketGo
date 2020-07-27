@@ -129,10 +129,11 @@ func (c *Config) readMsg(s *Socket) {
 			}
 		case "/stats": // /stats sid {clickCount:10,errorCount:20,pageCount:4} (json string - no space in json)
 			if len(args) >= 3 {
-				fmt.Println("*************in******")
 				sid := args[1]
 				statData := args[2]
 				stats[sid] = statData
+				fmt.Println("*************in******",statData)
+				fmt.Println("*************Dict******",stats[sid])
 			}
 
 		case "/connect":
