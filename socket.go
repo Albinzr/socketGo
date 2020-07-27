@@ -131,6 +131,9 @@ func (c *Config) readMsg(s *Socket) {
 			if len(args) == 3 {
 				sid := args[1]
 				statData := args[2]
+				fmt.Println("*******************************************************************************&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+				fmt.Println(args)
+				fmt.Println("*******************************************************************************&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 				stats[sid] = statData
 			}
 
@@ -149,8 +152,7 @@ func (c *Config) readMsg(s *Socket) {
 				}else{
 					s.Initial = false
 				}
-
-
+				
 				s.StartTime = time.Now().Unix() * 1000
 				s.Write("Accepted")
 				s.Write(s.Sid + "-" + s.Aid)
