@@ -64,10 +64,17 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 
 		currentStats := getStats(stats[sid])
 
+		fmt.Println("***********************************")
+		fmt.Println(currentStats)
+		fmt.Println("***********************************")
 		soc.ClickCount = getMapValue(currentStats, "clickCount")
 		soc.ErrorCount = getMapValue(currentStats, "errorCount")
 		soc.PageCount = getMapValue(currentStats, "pageCount")
-
+		fmt.Println("***********************************")
+		fmt.Println(soc.ClickCount)
+		fmt.Println(soc.ErrorCount)
+		fmt.Println(soc.PageCount)
+		fmt.Println("***********************************")
 		delete(stats, sid)
 
 		c.OnDisconnect(soc)
