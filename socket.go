@@ -129,12 +129,15 @@ func (c *Config) readMsg(s *Socket) {
 			}
 		case "/stats": // /stats sid {clickCount:10,errorCount:20,pageCount:4} (json string - no space in json)
 			fmt.Println("*******************************************************************************&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-			fmt.Println(args)
+			fmt.Println(args,len(args))
 			fmt.Println("*******************************************************************************&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 			if len(args) == 3 {
+				fmt.Println("*************in******")
+				fmt.Println(args[0],args[1],args[2])
 				sid := args[1]
 				statData := args[2]
 				stats[sid] = statData
+				fmt.Println(statData,stats[sid])
 			}
 
 		case "/connect":
