@@ -85,11 +85,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 
 func getMapValue(obj map[string]interface{}, key string) int {
 	if item, found := obj[key]; found {
-		if value, ok := item.(int); !ok {
-			return value
-		} else {
-			return 0
-		}
+		return int(item.(float64))
 	} else {
 		return 0
 	}
@@ -99,7 +95,7 @@ func getStats(stats string) map[string]interface{} {
 
 	var raw map[string]interface{}
 	if err := json.Unmarshal([]byte(stats), &raw); err != nil {
-		panic(err)
+		return nil
 	}
 	return  raw
 }
