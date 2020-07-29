@@ -38,7 +38,7 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 2 * time.Minute,
 }
 
-var stats map[string]string = make(map[string]string)
+var stats = make(map[string]string)
 
 //Init -
 func (c *Config) Init() {
@@ -96,9 +96,12 @@ func getMapValue(obj map[string]interface{}, key string) int {
 }
 
 func getStats(stats string) map[string]interface{} {
-	var result map[string]interface{}
-	json.Unmarshal([]byte(stats), &result)
-	return result
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal([]byte(stats), &raw); err != nil {
+		panic(err)
+	}
+	return  raw
 }
 
 func (c *Config) readMsg(s *Socket) {
