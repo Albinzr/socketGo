@@ -85,15 +85,19 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 
 func getMapValue(obj map[string]interface{}, key string) int {
 	if item, found := obj[key]; found {
-		if value, ok := item.(float64); !ok {
+
+		if value, ok := item.(float64); ok {
+
 			return int(value)
 		} else {
 			return 0
 		}
+
 	} else {
 		return 0
 	}
 }
+
 
 func getStats(stats string) map[string]interface{} {
 
