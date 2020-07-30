@@ -149,7 +149,18 @@ func (c *Config) readMsg(s *Socket) {
 				fmt.Println("*************in******",statData)
 				fmt.Println("*************Dict******",stats[sid])
 			}
-
+		case "/userInfo": // /userInfo
+			if len(args) >= 3 {
+				enMsg := args[1]
+				c.OnRecive(s, channel, enMsg)
+				s.Write("ack " + args[2])
+			}
+		case "/track": // /userInfo
+			if len(args) >= 3 {
+				enMsg := args[1]
+				c.OnRecive(s, channel, enMsg)
+				s.Write("ack " + args[2])
+			}
 		case "/connect":
 			if len(s.Sid) > 0 {
 				//remove write
