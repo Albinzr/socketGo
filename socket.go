@@ -146,8 +146,6 @@ func (c *Config) readMsg(s *Socket) {
 				sid := args[1]
 				statData := args[2]
 				stats[sid] = statData
-				fmt.Println("*************in******",statData)
-				fmt.Println("*************Dict******",stats[sid])
 			}
 		case "/track", "/update", "/userInfo":
 			if len(args) >= 3 {
