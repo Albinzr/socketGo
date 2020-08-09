@@ -168,6 +168,7 @@ func (c *Config) readMsg(s *Socket) {
 				case "initialUrl":
 					s.Urls = append(s.Urls, value)
 					s.InitialURL = value
+					s.ExitURL = value
 					//userInfo
 					// /userInfo <name> value ack ---------------------------names:[username,sex,id,age,email]
 					// eg:- /userInfo username albin er34
