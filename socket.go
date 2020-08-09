@@ -27,22 +27,22 @@ type Socket struct {
 	IP         string          `json:"ip"`
 	Aid        string          `json:"aid"`
 	Sid        string          `json:"sid"`
-	StartTime  int64           `json:"startTime"`
-	EndTime    int64           `json:"endTime"`
-	ErrorCount int             `json:"errorCount"`
-	ClickCount int             `json:"clickCount"`
-	PageCount  int             `json:"pageCount"`
-	Initial    bool            `json:"initial"`
-	Tags       []string        `json:"tags"`
-	Urls       []string        `json:"urls"`
-	Username   string          `json:"username"`
-	ID         string          `json:"id"`
-	Sex        string          `json:"sex"`
-	Age        int             `json:"age"`
-	Email      string          `json:"email"`
-	InitialURL string          `json:"initialUrl"`
-	ExitURL    string          `json:"exitUrl"`
 	Type       string          `json:"type"`
+	StartTime  int64           `json:"startTime,omitempty"`
+	EndTime    int64           `json:"endTime,omitempty"`
+	ErrorCount int             `json:"errorCount,omitempty"`
+	ClickCount int             `json:"clickCount,omitempty"`
+	PageCount  int             `json:"pageCount,omitempty"`
+	Initial    bool            `json:"initial,omitempty"`
+	Tags       []string        `json:"tags,omitempty"`
+	Urls       []string        `json:"urls,omitempty"`
+	Username   string          `json:"username,omitempty"`
+	ID         string          `json:"id,omitempty"`
+	Sex        string          `json:"sex,omitempty"`
+	Age        int             `json:"age,omitempty"`
+	Email      string          `json:"email,omitempty"`
+	InitialURL string          `json:"initialUrl,omitempty"`
+	ExitURL    string          `json:"exitUrl,omitempty"`
 }
 
 var upgrader = websocket.Upgrader{
