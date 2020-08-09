@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,22 +24,29 @@ type Config struct {
 //Socket socket data passed for callback
 type Socket struct {
 	conn       *websocket.Conn
-	IP         string `json:"ip"`
-	Aid        string `json:"aid"`
-	Sid        string `json:"sid"`
-	StartTime  int64  `json:"startTime"`
-	EndTime    int64  `json:"endTime"`
-	ErrorCount int    `json:"errorCount"`
-	ClickCount int    `json:"clickCount"`
-	PageCount  int    `json:"pageCount"`
-	Initial  bool    `json:"initial"`
+	IP         string   `json:"ip"`
+	Aid        string   `json:"aid"`
+	Sid        string   `json:"sid"`
+	StartTime  int64    `json:"startTime"`
+	EndTime    int64    `json:"endTime"`
+	ErrorCount int      `json:"errorCount"`
+	ClickCount int      `json:"clickCount"`
+	PageCount  int      `json:"pageCount"`
+	Initial    bool     `json:"initial"`
+	Tags       []string `json:"tags"`
+	Urls       []string `json:"urls"`
+	Username   string   `json:"username"`
+	ID         string   `json:"id"`
+	Sex        string   `json:"sex"`
+	Age        int      `json:"age"`
+	Email      string   `json:"email"`
+	InitialURL string   `json:"initialUrl"`
+	ExitURL    string   `json:"exitUrl"`
 }
 
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: 2 * time.Minute,
 }
-
-var stats = make(map[string]string)
 
 //Init -
 func (c *Config) Init() {
@@ -59,24 +67,7 @@ func (c *Config) processData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		fmt.Println("Connection closed")
-		sid := soc.Sid
 		soc.EndTime = time.Now().Unix() * 1000
-
-		currentStats := getStats(stats[sid])
-
-		fmt.Println("***********************************")
-		fmt.Println(currentStats)
-		fmt.Println("***********************************")
-		soc.ClickCount = getMapValue(currentStats, "clickCount")
-		soc.ErrorCount = getMapValue(currentStats, "errorCount")
-		soc.PageCount = getMapValue(currentStats, "pageCount")
-		fmt.Println("***********************************")
-		fmt.Println(soc.ClickCount)
-		fmt.Println(soc.ErrorCount)
-		fmt.Println(soc.PageCount)
-		fmt.Println("***********************************")
-		delete(stats, sid)
-
 		c.OnDisconnect(soc)
 		conn.Close()
 	}()
@@ -98,14 +89,13 @@ func getMapValue(obj map[string]interface{}, key string) int {
 	}
 }
 
-
 func getStats(stats string) map[string]interface{} {
 
 	var raw map[string]interface{}
 	if err := json.Unmarshal([]byte(stats), &raw); err != nil {
 		return nil
 	}
-	return  raw
+	return raw
 }
 
 func (c *Config) readMsg(s *Socket) {
@@ -120,7 +110,10 @@ func (c *Config) readMsg(s *Socket) {
 
 		msg := string(msgBytes)
 		msg = strings.Trim(msg, "\r\n")
-		args := strings.Split(msg, " ")
+		args := strings.Split(msg, "&%&")
+		if len(args) == 0 {
+			return
+		}
 		channel := strings.TrimSpace(args[0])
 
 		switch channel {
@@ -141,13 +134,60 @@ func (c *Config) readMsg(s *Socket) {
 				s.IP = args[2]
 				s.StartTime = time.Now().Unix() * 1000
 			}
-		case "/stats": // /stats sid {clickCount:10,errorCount:20,pageCount:4} (json string - no space in json)
+		case "/stats", "/update", "/userInfo": // /stats <name> value ack
+
 			if len(args) >= 3 {
-				sid := args[1]
-				statData := args[2]
-				stats[sid] = statData
+				key := args[1]
+				value := args[2]
+
+				switch key {
+				//stats
+				// /stats <name> value ack ---------------------------names:[clickCount,errorCount,pageCount]
+				// eg:- /stats clickCount 30 er34
+				case "clickCount":
+					if clickCount, err := strconv.Atoi(value); err == nil {
+						s.ClickCount = clickCount
+					}
+				case "errorCount":
+					if errorCount, err := strconv.Atoi(value); err == nil {
+						s.ErrorCount = errorCount
+					}
+				case "pageCount":
+					if pageCount, err := strconv.Atoi(value); err == nil {
+						s.PageCount = pageCount
+					}
+				//update
+				// /update <name> value ack ---------------------------names:[tag,URL,initialUrl]
+				// eg:- /update initialUrl www.google.com er34
+				case "tag":
+					s.Tags = append(s.Tags, value)
+				case "url":
+					s.Urls = append(s.Urls, value)
+					s.ExitURL = value
+				case "initialUrl":
+					s.Urls = append(s.Urls, value)
+					s.InitialURL = value
+					//userInfo
+					// /userInfo <name> value ack ---------------------------names:[username,sex,id,age,email]
+					// eg:- /userInfo username albin er34
+				case "username":
+					s.Username = value
+				case "sex":
+					s.Sex = value
+				case "id":
+					s.ID = value
+				case "email":
+					s.Email = value
+				case "age":
+					if age, err := strconv.Atoi(value); err == nil {
+						s.Age = age
+					}
+				}
+
+				s.Write("ack " + args[3])
 			}
-		case "/track", "/update", "/userInfo":
+
+		case "/track":
 			if len(args) >= 3 {
 				enMsg := args[1]
 				c.OnRecive(s, channel, enMsg)
@@ -163,12 +203,12 @@ func (c *Config) readMsg(s *Socket) {
 				s.Sid = args[1]
 				s.Aid = args[2]
 
-				if len(args) >= 4 && args[3] == "initial"{
+				if len(args) >= 4 && args[3] == "initial" {
 					s.Initial = true
-				}else{
+				} else {
 					s.Initial = false
 				}
-				
+
 				s.StartTime = time.Now().Unix() * 1000
 				s.Write("Accepted")
 				s.Write(s.Sid + "-" + s.Aid)
@@ -178,15 +218,11 @@ func (c *Config) readMsg(s *Socket) {
 				s.conn.Close()
 			}
 
-
 		case "/hb":
-			if len(args) == 1 {
-				fmt.Println("hb--->")
-			}
-
+			break
 		default:
 
-			fmt.Println("****************************")
+			fmt.Println("***********ERROR*****************")
 			fmt.Println("unknown command:", channel)
 			fmt.Println(msg)
 			fmt.Println("Connection will now close ----CLOSED----")

@@ -8,4 +8,5 @@ require (
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/gobwas/ws v1.0.3 // indirect
 	github.com/gorilla/websocket v1.4.2
+	golang.org/x/text v0.3.3 // indirect
 )
