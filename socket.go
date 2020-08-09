@@ -175,7 +175,7 @@ func (c *Config) readMsg(s *Socket) {
 					s.Username = value
 				case "sex":
 					s.Sex = value
-				case "id":
+				case "uuid":
 					s.ID = value
 				case "email":
 					s.Email = value
