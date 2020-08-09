@@ -42,7 +42,7 @@ type Socket struct {
 	Email      string          `json:"email"`
 	InitialURL string          `json:"initialUrl"`
 	ExitURL    string          `json:"exitUrl"`
-	Status     string          `json:"status"`
+	Type       string          `json:"type"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -202,7 +202,7 @@ func (c *Config) readMsg(s *Socket) {
 			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
-				s.Status = "close"
+				s.Type = "close"
 
 				if len(args) >= 4 && args[3] == "initial" {
 					s.Initial = true
