@@ -23,25 +23,26 @@ type Config struct {
 
 //Socket socket data passed for callback
 type Socket struct {
-	conn       *websocket.Conn
-	IP         string   `json:"ip"`
-	Aid        string   `json:"aid"`
-	Sid        string   `json:"sid"`
-	StartTime  int64    `json:"startTime"`
-	EndTime    int64    `json:"endTime"`
-	ErrorCount int      `json:"errorCount"`
-	ClickCount int      `json:"clickCount"`
-	PageCount  int      `json:"pageCount"`
-	Initial    bool     `json:"initial"`
-	Tags       []string `json:"tags"`
-	Urls       []string `json:"urls"`
-	Username   string   `json:"username"`
-	ID         string   `json:"id"`
-	Sex        string   `json:"sex"`
-	Age        int      `json:"age"`
-	Email      string   `json:"email"`
-	InitialURL string   `json:"initialUrl"`
-	ExitURL    string   `json:"exitUrl"`
+	conn       *websocket.Conn `json:"-"`
+	IP         string          `json:"ip"`
+	Aid        string          `json:"aid"`
+	Sid        string          `json:"sid"`
+	StartTime  int64           `json:"startTime"`
+	EndTime    int64           `json:"endTime"`
+	ErrorCount int             `json:"errorCount"`
+	ClickCount int             `json:"clickCount"`
+	PageCount  int             `json:"pageCount"`
+	Initial    bool            `json:"initial"`
+	Tags       []string        `json:"tags"`
+	Urls       []string        `json:"urls"`
+	Username   string          `json:"username"`
+	ID         string          `json:"id"`
+	Sex        string          `json:"sex"`
+	Age        int             `json:"age"`
+	Email      string          `json:"email"`
+	InitialURL string          `json:"initialUrl"`
+	ExitURL    string          `json:"exitUrl"`
+	Status     string          `json:"status" default:"close"`
 }
 
 var upgrader = websocket.Upgrader{
