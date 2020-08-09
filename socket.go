@@ -42,7 +42,7 @@ type Socket struct {
 	Email      string          `json:"email"`
 	InitialURL string          `json:"initialUrl"`
 	ExitURL    string          `json:"exitUrl"`
-	Status     string          `json:"status" default:"close"`
+	Status     string          `json:"status"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -196,13 +196,13 @@ func (c *Config) readMsg(s *Socket) {
 			}
 		case "/connect":
 			if len(s.Sid) > 0 {
-				//remove write
 				s.Write("Multiple connection (connection will close now) ")
 				s.conn.Close()
 			}
 			if len(args) >= 3 {
 				s.Sid = args[1]
 				s.Aid = args[2]
+				s.Status = "close"
 
 				if len(args) >= 4 && args[3] == "initial" {
 					s.Initial = true
