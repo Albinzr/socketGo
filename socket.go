@@ -41,7 +41,7 @@ type Socket struct {
 	Sex        string          `json:"sex,omitempty"`
 	Age        int             `json:"age,omitempty"`
 	Email      string          `json:"email,omitempty"`
-	InitialURL string          `json:"initialUrl,omitempty"`
+	entryURL   string          `json:"entryUrl,omitempty"`
 	ExitURL    string          `json:"exitUrl,omitempty"`
 }
 
@@ -167,7 +167,7 @@ func (c *Config) readMsg(s *Socket) {
 					s.ExitURL = value
 				case "initialUrl":
 					s.Urls = append(s.Urls, value)
-					s.InitialURL = value
+					s.entryURL = value
 					s.ExitURL = value
 					//userInfo
 					// /userInfo <name> value ack ---------------------------names:[username,sex,id,age,email]
