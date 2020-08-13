@@ -118,6 +118,8 @@ func (c *Config) readMsg(s *Socket) {
 		channel := strings.TrimSpace(args[0])
 
 		switch channel {
+		case "/hb":
+			break
 		//TODO: - check sum logic, decompression logic
 		case "/beacon":
 			if len(args) >= 2 && len(s.Sid) > 0 {
@@ -220,8 +222,12 @@ func (c *Config) readMsg(s *Socket) {
 				s.conn.Close()
 			}
 
-		case "/hb":
-			break
+		case "/feedback":
+			if len(args) >= 2 && len(s.Sid) > 0 {
+				enMsg := args[1]
+				c.OnRecive(s, channel, enMsg)
+				s.Write("ack " + args[2])
+			}
 		default:
 
 			fmt.Println("***********ERROR*****************")
