@@ -1,0 +1,42 @@
+name: Generate SBOM
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-sbom:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up the environment (e.g., for a Node.js or Java project)
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Install dependencies (if applicable, e.g., for Node.js)
+    - name: Install dependencies
+      run: npm install
+
+    # Generate SBOM using sbom-action (example with CycloneDX format)
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v2
+      with:
+        output-format: cyclonedx  # CycloneDX or spdx formats are commonly supported
+        output-file: sbom.json    # Output SBOM file
+
+    # Optional: Upload the SBOM to GitHub artifacts for easy access
+    - name: Upload SBOM as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: sbom
+        path: sbom.json
